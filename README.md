@@ -1,2 +1,3 @@
-# ScopeSearch
-ScopeSearch is an attack surface discovery and exposure monitoring platform designed ONLY for assets that the user owns or is authorized to test.
+# ScopeSearch Monorepo
+
+Main project files are in [`/scopesearch`](./scopesearch).

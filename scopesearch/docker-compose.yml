@@ -1,0 +1,59 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: scopesearch
+      POSTGRES_USER: scopesearch
+      POSTGRES_PASSWORD: scopesearch
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    environment:
+      DATABASE_URL: postgresql+psycopg://scopesearch:scopesearch@postgres:5432/scopesearch
+      REDIS_URL: redis://redis:6379/0
+      SCOPE_FILE: /app/scope.yml
+    volumes:
+      - ./scope.yml:/app/scope.yml:ro
+    depends_on:
+      - postgres
+      - redis
+    ports:
+      - "8000:8000"
+
+  worker:
+    build:
+      context: .
+      dockerfile: worker/Dockerfile
+    environment:
+      DATABASE_URL: postgresql+psycopg://scopesearch:scopesearch@postgres:5432/scopesearch
+      REDIS_URL: redis://redis:6379/0
+      SCOPE_FILE: /app/scope.yml
+    volumes:
+      - ./scope.yml:/app/scope.yml:ro
+    depends_on:
+      - api
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    environment:
+      NEXT_PUBLIC_API_BASE: http://localhost:8000
+    depends_on:
+      - api
+    ports:
+      - "3000:3000"
+
+volumes:
+  pgdata:
